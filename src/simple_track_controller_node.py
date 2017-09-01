@@ -32,22 +32,22 @@ class SimpleStopControllerNode:
        		 # for omega, right is negative
         theta = math.atan(y/x)
         	#omega = theta / time
-		rospy.loginfo("theta is")
-		rospy.loginfo(str(math.degrees(theta)))
+	rospy.loginfo("theta is")
+	rospy.loginfo(str(math.degrees(theta)))
         	#rospy.loginfo("omega is")
         	#rospy.loginfo(str(omega))
 
         # control decision	
-		kinect = Twist2DStamped()
-		if dist > 0.25:
-			self.choose("S")
-		elif dist < 0.05:
-			self.choose("M")
+	kinect = Twist2DStamped()
+	if dist > 0.25:
+		self.choose("S")
+	elif dist < 0.05:
+		self.choose("M")
+	else:
+		if math.degrees(theta) > 0:
+			self.choose("G")
 		else:
-			if math.degrees(theta) > 0:
-				self.choose("G")
-			else:
-				self.choose("F")
+			self.choose("F")
 
 		#rospy.loginfo("v,omega is")
 		#rospy.loginfo(str(kinect.v))
@@ -56,8 +56,8 @@ class SimpleStopControllerNode:
 
 	def fuck(self,v, omega, duration):
 		#rospy.sleep(0.3)
-    	car_cmd = Twist2DStamped()
-    	car_cmd.v = v
+    		car_cmd = Twist2DStamped()
+    		car_cmd.v = v
    		car_cmd.omega = omega
    		self.pub_car_cmd.publish(car_cmd)
 		print"fuck"
