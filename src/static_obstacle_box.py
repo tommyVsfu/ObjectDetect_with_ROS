@@ -21,20 +21,22 @@ class Matcher:
 
     def get_filtered_contours(self,img):
             hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-            frame_threshed = cv2.inRange(hsv_img, np.array([0,160,46]), np.array([10,255,255]))  #color map
-            kernel = np.ones((5,5),np.uint8)
-            print frame_threshed[3]
+            frame_threshed = cv2.inRange(hsv_img, np.array([0,90,46]), np.array([10,255,255]))  #color map
+            kernel = np.ones((8,8),np.uint8)
             dilation = cv2.dilate(frame_threshed,kernel,iterations = 1)
-            #ret,thresh = cv2.threshold(frame_threshed,46,255,0)
 
             im2, contours, hierarchy = cv2.findContours(dilation,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
             contour_area = [ (cv2.contourArea(c), (c) ) for c in contours]
                 
-            tmp = np.array([(contour_area[i][0])  for i in range(len(contour_area))])
-            maxindex = np.argmax(tmp)
+            tmp = np.zeros(len(contour_area))
+            for i in range(len(tmp)):
+                area, cnt = contour_area[i]
+                x,y,w,h = cv2.boundingRect(cnt)
+                tmp[i] = y
+            index = np.argmax(tmp)
 
-            area, cnt = contour_area[maxindex]
+            area, cnt = contour_area[index]
             print area
             x,y,w,h = cv2.boundingRect(cnt)
             font = cv2.FONT_HERSHEY_SIMPLEX
