@@ -12,6 +12,43 @@ class SimpleStopControllerNode:
 	self.projection = rospy.Subscriber("/obstacle_safety_node/detection_list_proj",ObstacleProjectedDetectionList,self.cbdata_transfer,queue_size = 1)
         self.pub_car_cmd = rospy.Publisher("~car_cmd",Twist2DStamped,queue_size=1)
 
+	def fuck(self,v, omega, duration):
+		#rospy.sleep(0.3)
+    	car_cmd = Twist2DStamped()
+    	car_cmd.v = v
+   		car_cmd.omega = omega
+   		self.pub_car_cmd.publish(car_cmd)
+		print"fuck"
+		rospy.sleep(duration)	
+		#print "fuck"
+		#car_cmd.v = 0.0
+		#car_cmd.omega = 0.0
+		#self.pub_car_cmd.publish(car_cmd)
+
+	def choose(self,cat):
+		for i in range(len(cat)):
+			pri = cat[i]
+			if pri == 'S': #forward
+				self.fuck(4.0,0,1)
+			if pri == 'B': #back
+				self.fuck(-0.5,0,2)
+			if pri == 'R': #right
+				self.fuck(0,-8,1.0)
+			if pri == 'L': #left
+				self.fuck(0,8,1.125)
+			if pri == 'O': #left+forward,90 degrees
+				self.fuck(0.50,8.9,2)
+				self.fuck(0,8,0.5)
+			if pri == 'P': #right+forward, 90degrees
+				self.fuck(0.5,-8,2)
+			if pri == 'G': #right+forward, 30degrees
+				self.fuck(0.5,-8,1.2)
+				self.fuck(0.5,0,0.5)
+			if pri == 'F': #left+forward,30 degrees
+				self.fuck(0.45,8,2)
+			if pri == 'M': #stop!
+				self.fuck(0,0,2)
+				
    def cbdata_transfer(self, data):
 	stamp = rospy.Time.now()
 	tmp1 = stamp.to_sec()
@@ -54,42 +91,6 @@ class SimpleStopControllerNode:
 		#rospy.loginfo(str(kinect.omega)) 
 		#self.pub_car_cmd.publish(kinect)
 
-	def fuck(self,v, omega, duration):
-		#rospy.sleep(0.3)
-    	car_cmd = Twist2DStamped()
-    	car_cmd.v = v
-   		car_cmd.omega = omega
-   		self.pub_car_cmd.publish(car_cmd)
-		print"fuck"
-		rospy.sleep(duration)	
-		#print "fuck"
-		#car_cmd.v = 0.0
-		#car_cmd.omega = 0.0
-		#self.pub_car_cmd.publish(car_cmd)
-
-	def choose(self,cat):
-		for i in range(len(cat)):
-			pri = cat[i]
-			if pri == 'S': #forward
-				self.fuck(4.0,0,1)
-			if pri == 'B': #back
-				self.fuck(-0.5,0,2)
-			if pri == 'R': #right
-				self.fuck(0,-8,1.0)
-			if pri == 'L': #left
-				self.fuck(0,8,1.125)
-			if pri == 'O': #left+forward,90 degrees
-				self.fuck(0.50,8.9,2)
-				self.fuck(0,8,0.5)
-			if pri == 'P': #right+forward, 90degrees
-				self.fuck(0.5,-8,2)
-			if pri == 'G': #right+forward, 30degrees
-				self.fuck(0.5,-8,1.2)
-				self.fuck(0.5,0,0.5)
-			if pri == 'F': #left+forward,30 degrees
-				self.fuck(0.45,8,2)
-			if pri == 'M': #stop!
-				self.fuck(0,0,2)
 	
 
 	
