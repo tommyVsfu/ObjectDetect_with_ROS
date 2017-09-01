@@ -35,6 +35,11 @@ class qti(object):
 				self.fuck(0,8,0.5)
 			if pri == 'P':
 				self.fuck(0.5,-8,2)
+			if pri == 'G':
+				self.fuck(0.5,-8,1.2)
+				self.fuck(0.5,0,0.5)
+			if pri == 'F':
+				self.fuck(0.45,8,2)
 			if pri == 'M':
 				self.fuck(0,0,2)
 
@@ -43,7 +48,7 @@ if __name__ == '__main__':
 	rospy.init_node('simple_stop_controller_node')
 	ss = qti()
 	rospy.sleep(0.5) #need to delay
-	ss.choose("LM")	
+	ss.choose("FM")
 	print "hi"
 
 
