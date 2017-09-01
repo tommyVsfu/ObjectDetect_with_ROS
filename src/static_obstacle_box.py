@@ -20,24 +20,27 @@ class Matcher:
             self.bridge1 = CvBridge()
 
     def get_filtered_contours(self,img):
-                hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-                frame_threshed = cv2.inRange(hsv_img, np.array([0,130,46]), np.array([10,255,255]))  #color map 
-                ret,thresh = cv2.threshold(frame_threshed,46,255,0)
+            hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            frame_threshed = cv2.inRange(hsv_img, np.array([0,160,46]), np.array([10,255,255]))  #color map
+            kernel = np.ones((5,5),np.uint8)
+            print frame_threshed[3]
+            dilation = cv2.dilate(frame_threshed,kernel,iterations = 1)
+            #ret,thresh = cv2.threshold(frame_threshed,46,255,0)
 
-                im2, contours, hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+            im2, contours, hierarchy = cv2.findContours(dilation,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
-                contour_area = [ (cv2.contourArea(c), (c) ) for c in contours]
+            contour_area = [ (cv2.contourArea(c), (c) ) for c in contours]
                 
-                tmp = np.array([(contour_area[i][0])  for i in range(len(contour_area))])
-                maxindex = np.argmax(tmp)
+            tmp = np.array([(contour_area[i][0])  for i in range(len(contour_area))])
+            maxindex = np.argmax(tmp)
 
-                area, cnt = contour_area[maxindex]
-                print area
-                x,y,w,h = cv2.boundingRect(cnt)
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                cv2.putText(img, "ObjectBox", (x,y-5),font,0.5,[0,255,0],2)
-                cv2.rectangle(img,(x,y),(x+w,y+h),[0,255,0],2)
-                return x,y,w,h,img
+            area, cnt = contour_area[maxindex]
+            print area
+            x,y,w,h = cv2.boundingRect(cnt)
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.putText(img, "ObjectBox", (x,y-5),font,0.5,[0,255,0],2)
+            cv2.rectangle(img,(x,y),(x+w,y+h),[0,255,0],2)
+            return x,y,w,h,img
 
 
     def contour_match(self, img):
