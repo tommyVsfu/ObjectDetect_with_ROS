@@ -76,9 +76,9 @@ class SimpleStopControllerNode:
 
         # control decision	
 		kinect = Twist2DStamped()
-		if dist > 0.25:
+		if dist > 0.3:
 			self.choose("S")
-		elif dist < 0.05:
+		elif dist < 0.1:
 			self.choose("M")
 		else:
 			if math.degrees(theta) > 0:
