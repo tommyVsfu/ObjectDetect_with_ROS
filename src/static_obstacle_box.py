@@ -21,8 +21,8 @@ class Matcher:
 
     def get_filtered_contours(self,img):
             hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-            frame_threshed = cv2.inRange(hsv_img, np.array([0,90,46]), np.array([10,255,255]))  #color map
-            kernel = np.ones((8,8),np.uint8)
+            frame_threshed = cv2.inRange(hsv_img, np.array([0,160,46]), np.array([10,255,255]))  #color map
+            kernel = np.ones((16,16),np.uint8)
             dilation = cv2.dilate(frame_threshed,kernel,iterations = 1)
 
             im2, contours, hierarchy = cv2.findContours(dilation,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
