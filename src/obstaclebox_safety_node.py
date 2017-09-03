@@ -52,31 +52,32 @@ class ObstacleSafetyNode:
         for obstacle in detections_msg.list: 
             marker = Marker()
             rect = obstacle.bounding_box
-	    # the x,y need to corrected
-	    if rect.x > rect.h:
-		rospy.loginfo("this is x,y,w,h")		
-	    #rospy.loginfo(str(rect.x))
-	    #rospy.loginfo(str(rect.y))
-	    #rospy.loginfo(str(rect.w))
-	    #rospy.loginfo(str(rect.h))
-	    #rect.x = rect.x - rect.w
-	    rect.y = rect.y + rect.h 
-		#rect.y = rect.y - rect.w
-	    #rospy.loginfo(str(rect.x))
-	    #rospy.loginfo(str(rect.y))
-            p.x = float(rect.x)/float(width)
-            p.y = float(rect.y)/float(height)
-            #rospy.loginfo("p.x,p.y")
-	    #rospy.loginfo(str(p.x))
-	    #rospy.loginfo(str(p.y))
-            p2.x = float(rect.x + rect.w)/float(width)
-            p2.y = p.y
+        if rect.x!= 0 and rect.y!=0 :
+	       # the x,y need to corrected
+	       if rect.x > rect.h:
+		  rospy.loginfo("this is x,y,w,h")		
+	       #rospy.loginfo(str(rect.x))
+	       #rospy.loginfo(str(rect.y))
+	       #rospy.loginfo(str(rect.w))
+	       #rospy.loginfo(str(rect.h))
+	       #rect.x = rect.x - rect.w
+	       rect.y = rect.y + rect.h 
+		  #rect.y = rect.y - rect.w
+	       #rospy.loginfo(str(rect.x))
+	       #rospy.loginfo(str(rect.y))
+                p.x = float(rect.x)/float(width)
+                p.y = float(rect.y)/float(height)
+                #rospy.loginfo("p.x,p.y")
+	       #rospy.loginfo(str(p.x))
+	       #rospy.loginfo(str(p.y))
+                p2.x = float(rect.x + rect.w)/float(width)
+                p2.y = p.y
 
-            projected_point = self.ground_proj(p)
-            projected_point2 = self.ground_proj(p2)
-	    rospy.loginfo("p.x p.y is")
-            rospy.loginfo(projected_point.gp.x)
-            rospy.loginfo(projected_point.gp.y)
+                projected_point = self.ground_proj(p)
+                projected_point2 = self.ground_proj(p2)
+	        rospy.loginfo("p.x p.y is")
+                rospy.loginfo(projected_point.gp.x)
+                rospy.loginfo(projected_point.gp.y)
 	    rospy.loginfo("p.x2 p.y2 is")
             rospy.loginfo(projected_point2.gp.x)
             rospy.loginfo(projected_point2.gp.y)
@@ -159,6 +160,15 @@ class ObstacleSafetyNode:
         self.pub_too_close.publish(b)
         self.pub_projections.publish(projection_list)
         self.pub_markers.publish(marker_array)
+    else :
+        projection = ObstacleProjectedDetection()
+        projection.location.x=0
+        projection.location.y=0
+        projection.location.z=0
+        projection.location.distance=0
+        projection_list.list.append(projection)
+        self.pub_drawimg.publish(self.bridge.cv2_to_imgmsg(dst,"bgr8"))
+        self.pub_projections.publish(projection_list)
 
 if __name__=="__main__":
     rospy.init_node('obstacle_safety_node')

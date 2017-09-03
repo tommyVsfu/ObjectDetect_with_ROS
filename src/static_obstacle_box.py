@@ -24,25 +24,29 @@ class Matcher:
             frame_threshed = cv2.inRange(hsv_img, np.array([0,160,46]), np.array([10,255,255]))  #color map
             kernel = np.ones((16,16),np.uint8)
             dilation = cv2.dilate(frame_threshed,kernel,iterations = 1)
-
-            im2, contours, hierarchy = cv2.findContours(dilation,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-
-            contour_area = [ (cv2.contourArea(c), (c) ) for c in contours]
+            try:
+                im2, contours, hierarchy = cv2.findContours(dilation,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+                contour_area = [ (cv2.contourArea(c), (c) ) for c in contours]
                 
-            tmp = np.zeros(len(contour_area))
-            for i in range(len(tmp)):
-                area, cnt = contour_area[i]
-                x,y,w,h = cv2.boundingRect(cnt)
-                tmp[i] = y
-            index = np.argmax(tmp)
+                tmp = np.zeros(len(contour_area))
+                for i in range(len(tmp)):
+                    area, cnt = contour_area[i]
+                    x,y,w,h = cv2.boundingRect(cnt)
+                    tmp[i] = y
+                index = np.argmax(tmp)
 
-            area, cnt = contour_area[index]
-            print area
-            x,y,w,h = cv2.boundingRect(cnt)
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(img, "ObjectBox", (x,y-5),font,0.5,[0,255,0],2)
-            cv2.rectangle(img,(x,y),(x+w,y+h),[0,255,0],2)
-            return x,y,w,h,img
+                area, cnt = contour_area[index]
+                print area
+                x,y,w,h = cv2.boundingRect(cnt)
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                cv2.putText(img, "ObjectBox", (x,y-5),font,0.5,[0,255,0],2)
+                cv2.rectangle(img,(x,y),(x+w,y+h),[0,255,0],2)
+                return x,y,w,h,img
+            except:
+                print("No Box!!!")
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                cv2.putText(img,"No Box",(320,240),font,0.5,[0,255,0],2)
+                return 0,0,0,0,img
 
 
     def contour_match(self, img):
