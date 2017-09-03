@@ -57,6 +57,7 @@ class SimpleStopControllerNode:
         	x = data.list[0].location.x
         	y = data.list[0].location.y
         	dist = data.list[0].distance
+    if dist != 0:
         	rospy.loginfo("here is x, y, dist")
         	rospy.loginfo(str(x))
         	rospy.loginfo(str(y))
@@ -76,16 +77,17 @@ class SimpleStopControllerNode:
 
         # control decision	
 		kinect = Twist2DStamped()
-		if dist > 0.3:
+		if math.degrees(theta) > 0 and dist > 0.3:
+			self.choose("G")
+		elif math.degrees(theta) < 0 and dist > 0.3:
+			self.choose("F")
+		elif dist < 0.3 :
 			self.choose("S")
-		elif dist < 0.1:
-			self.choose("M")
-		else:
-			if math.degrees(theta) > 0:
-				self.choose("G")
-			else:
-				self.choose("F")
+		
 
+	else:
+		kinect = Twist2DStamped()
+		self.choose("B")
 		#rospy.loginfo("v,omega is")
 		#rospy.loginfo(str(kinect.v))
 		#rospy.loginfo(str(kinect.omega)) 
