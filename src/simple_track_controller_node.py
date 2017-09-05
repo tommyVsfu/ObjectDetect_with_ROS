@@ -57,37 +57,37 @@ class SimpleStopControllerNode:
         	x = data.list[0].location.x
         	y = data.list[0].location.y
         	dist = data.list[0].distance
-    if dist != 0:
-        	rospy.loginfo("here is x, y, dist")
-        	rospy.loginfo(str(x))
-        	rospy.loginfo(str(y))
-        	rospy.loginfo(str(dist))
+    		if dist != 0:
+        		rospy.loginfo("here is x, y, dist")
+        		rospy.loginfo(str(x))
+        		rospy.loginfo(str(y))
+        		rospy.loginfo(str(dist))
 	
 	#if tmp2 != 0.0:
 		#time = tmp1-tmp2
 		#rospy.loginfo("time is")
 		#rospy.loginfo(str(time))
        		 # for omega, right is negative
-        	theta = math.atan(y/x)
+        		theta = math.atan(y/x)
         	#omega = theta / time
-		rospy.loginfo("theta is")
-		rospy.loginfo(str(math.degrees(theta)))
+			rospy.loginfo("theta is")
+			rospy.loginfo(str(math.degrees(theta)))
         	#rospy.loginfo("omega is")
         	#rospy.loginfo(str(omega))
 
         # control decision	
-		kinect = Twist2DStamped()
-		if math.degrees(theta) > 0 and dist > 0.3:
-			self.choose("G")
-		elif math.degrees(theta) < 0 and dist > 0.3:
-			self.choose("F")
-		elif dist < 0.3 :
-			self.choose("S")
+			kinect = Twist2DStamped()
+			if math.degrees(theta) > 0 and dist > 0.3:
+				self.choose("G")
+			elif math.degrees(theta) < 0 and dist > 0.3:
+				self.choose("F")
+			elif dist < 0.3 :
+				self.choose("S")
 		
 
-	else:
-		kinect = Twist2DStamped()
-		self.choose("B")
+		else:
+			kinect = Twist2DStamped()
+			self.choose("B")
 		#rospy.loginfo("v,omega is")
 		#rospy.loginfo(str(kinect.v))
 		#rospy.loginfo(str(kinect.omega)) 
