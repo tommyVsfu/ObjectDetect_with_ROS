@@ -15,9 +15,9 @@ class SimpleStopControllerNode:
 		self.projection = rospy.Subscriber("/obstacle_safety_node/detection_list_proj",ObstacleProjectedDetectionList,self.cbdata_transfer,queue_size = 1)
 		self.projection = rospy.Subscriber("Filter",Dmp,self.cbimudata,queue_size = 1)
 		self.pp = rospy.Subscriber("test",Vector2D,self.cbpp,queue_size = 1)
-        	self.pub_car_cmd = rospy.Publisher("~car_cmd",Twist2DStamped,queue_size=1)
+        self.pub_car_cmd = rospy.Publisher("~car_cmd",Twist2DStamped,queue_size=1)
       	self.t1 = threading.Thread(target = self.f1, name='control')
-      	self.t2 = threading.Thread(target = self.f2,args =(tmp,), name='imu')
+      	self.t2 = threading.Thread(target = self.f2, name='imu')
       	self.t3 = threading.Thread(target = self.f3, name = 'ScheduleThread')
 		self.threadC = threading.Condition()
 
@@ -104,6 +104,11 @@ class SimpleStopControllerNode:
                 tmp.thetaz = theta.thetaz
 				if self.t1.isAlive() and not self.t2.isAlive():
 					t2.start()
+					self.dataDegrees.thetax = theta.thetax
+					self.dataDegrees.thetay = theta.thetay
+					self.dataDegrees.thetaz = theta.thetaz
+					self.raw = self.dataDegrees.thetay
+		print(str(self.raw),"raw")
 				elif self.t1.isAlive() and self.t2.isAlive():					
 					continuous(tmp)		
 			
@@ -111,11 +116,6 @@ class SimpleStopControllerNode:
 
 	def f2(self,theta):
 		self.threadC.acquire()
-		self.dataDegrees.thetax = theta.thetax
-		self.dataDegrees.thetay = theta.thetay
-		self.dataDegrees.thetaz = theta.thetaz
-		self.raw = self.dataDegrees.thetay
-		print(str(self.raw),"raw")
 		self.threadC.wait()
 		self.threadC.release()
 
@@ -138,8 +138,8 @@ class SimpleStopControllerNode:
 			error = 0.1	
 			xr = math.cos(self.raw)
 			yr = math.sin(self.raw)
-			x = math.cos(self.dataDegrees.thetay)
-			y = math.sin(self.dataDegrees.thetay)
+			x = math.cos(dataDegrees.thetay)
+			y = math.sin(dataDegrees.thetay)
 			d = math.sqrt( (x - xr)**2 + (y - yr)**2 )
 			value = (2 - (d**2)) / float(2)
 			desire = math.degrees(math.acos(value))
