@@ -16,9 +16,10 @@ class SimpleStopControllerNode:
 		self.projection = rospy.Subscriber("Filter",Dmp,self.cbimudata,queue_size = 1)
 		self.pp = rospy.Subscriber("test",Vector2D,self.cbpp,queue_size = 1)
         	self.pub_car_cmd = rospy.Publisher("~car_cmd",Twist2DStamped,queue_size=1)
-		self.thread_lock = threading.Lock()
-		self.active  = False
-		self.mode = True
+      	self.t1 = threading.Thread(target = self.f1, name='control')
+      	self.t2 = threading.Thread(target = self.f2,args =(tmp,), name='imu')
+      	self.t3 = threading.Thread(target = self.f3, name = 'ScheduleThread')
+		self.threadC = threading.Condition()
 
 	def fuck(self,v, omega):
 		#rospy.sleep(0.3)
@@ -27,12 +28,7 @@ class SimpleStopControllerNode:
    		car_cmd.omega = omega
    		self.pub_car_cmd.publish(car_cmd)
 		print"fuck"
-		#rospy.sleep(duration)	
-		#print "fuck"
-		#car_cmd.v = 0.0
-		#car_cmd.omega = 0.0
-		#self.pub_car_cmd.publish(car_cmd)
-
+		
 	def choose(self,cat):
 		for i in range(len(cat)):
 			pri = cat[i]
@@ -70,14 +66,8 @@ class SimpleStopControllerNode:
         		rospy.loginfo(str(x))
         		rospy.loginfo(str(y))
         		rospy.loginfo(str(dist))
-	
-	#if tmp2 != 0.0:
-		#time = tmp1-tmp2
-		#rospy.loginfo("time is")
-		#rospy.loginfo(str(time))
-       		 # for omega, right is negative
         		theta = math.atan(y/x)
-        	#omega = theta / time
+        	
 			rospy.loginfo("theta is")
 			rospy.loginfo(str(math.degrees(theta)))
         	#rospy.loginfo("omega is")
@@ -99,100 +89,35 @@ class SimpleStopControllerNode:
 
 
 	def cbpp(self,dd):
-
 		if dd.x == 10.0:
-			t1 = threading.Thread(target = self.f1, name='control')
-			t1.start()
-
-
+			self.t1.start()
 
 	def f1(self):
-		#self.thread_lock.acquire()
-		self.raw = self.dataDegrees.thetay
-		#self.thread_lock.release()
-		print(str(self.raw),"raw")
-		
-
-		self.desire('R')
-		error = 0.1
-		mult = True
-		while mult:
-			#self.thread_lock.acquire()
-			xr = math.cos(self.raw)
-			yr = math.sin(self.raw)
-			#self.thread_lock.acquire()
-			x = math.cos(self.dataDegrees.thetay)
-			y = math.sin(self.dataDegrees.thetay)
-			#self.thread_lock.release()
-			d = math.sqrt( (x - xr)**2 + (y - yr)**2 )
-			value = (2 - (d**2)) / float(2)
-			desire = math.degrees(math.acos(value))
-			if desire >= 75.0:
-	         		mult = False
-			else :
-			 	mult = True
-			
-			#self.thread_lock.release()
-			
-		#print (str(self.dataDegrees.thetay),"raw")
-		self.desire('M')
-		rospy.loginfo("-----------------------------------------------------------------------------------------")
+		self.threadC.acquire()
+		self.threadC.wait()
+		self.threadC.release()
 
 	def cbimudata(self,theta):
 		tmp = Dmp()
                 tmp.thetax = theta.thetax
                 tmp.thetay = theta.thetay
                 tmp.thetaz = theta.thetaz
-				t2 = threading.Thread(target = self.f2,args =(tmp,), name='imu')
-				if <t1 active & t2 not active>:
-					#t2.start()
-				elif <t1 active & t2 active>					
+				if self.t1.isAlive() and not self.t2.isAlive():
+					t2.start()
+				elif self.t1.isAlive() and self.t2.isAlive():					
+					continuous(tmp)		
 			
-			#self.thread_lock.release()
 			
 
 	def f2(self,theta):
-		#self.thread_lock.acquire()
+		self.threadC.acquire()
 		self.dataDegrees.thetax = theta.thetax
 		self.dataDegrees.thetay = theta.thetay
 		self.dataDegrees.thetaz = theta.thetaz
 		self.raw = self.dataDegrees.thetay
-		#self.thread_lock.release()
 		print(str(self.raw),"raw")
-		
-	def continuous(self, dataDegrees):
-			self.desire('R')
-			error = 0.1
-			#mult = True
-		
-			#self.thread_lock.acquire()
-			xr = math.cos(self.raw)
-			yr = math.sin(self.raw)
-			#self.thread_lock.acquire()
-			x = math.cos(self.dataDegrees.thetay)
-			y = math.sin(self.dataDegrees.thetay)
-			#self.thread_lock.release()
-			d = math.sqrt( (x - xr)**2 + (y - yr)**2 )
-			value = (2 - (d**2)) / float(2)
-			desire = math.degrees(math.acos(value))
-			if desire >= 75.0:
-	         		mult = False
-					<release thread t1,t2>
-			else :
-			 	mult = True
-			
-			#self.thread_lock.release()
-			
-		#print (str(self.dataDegrees.thetay),"raw")
-		self.desire('M')
-		rospy.loginfo("-----------------------------------------------------------------------------------------")
-
-		#self.thread_lock.release()
-	
-
-
-	
-	
+		self.threadC.wait()
+		self.threadC.release()
 
 	def desire(self,cc):
 		for i in range(len(cc)):
@@ -207,6 +132,29 @@ class SimpleStopControllerNode:
 				self.fuck(0,8)
 			if pri == 'M':
 				self.fuck(0,0)
+
+	def continuous(self, dataDegrees):
+			self.desire('R')
+			error = 0.1	
+			xr = math.cos(self.raw)
+			yr = math.sin(self.raw)
+			x = math.cos(self.dataDegrees.thetay)
+			y = math.sin(self.dataDegrees.thetay)
+			d = math.sqrt( (x - xr)**2 + (y - yr)**2 )
+			value = (2 - (d**2)) / float(2)
+			desire = math.degrees(math.acos(value))
+			if desire >= 75.0:
+					self.t3.start()
+		self.desire('M')
+		rospy.loginfo("-----------------------------------------------------------------------------------------")
+
+	def f3(self):
+		self.threadC.acquire()
+		self.threadC.notifyAll()
+		print self.t1.isAlive()
+		print self.t2.isAlive()
+		self.threadC.release()
+
 	
 
 if __name__=="__main__":
