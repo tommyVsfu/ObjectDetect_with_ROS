@@ -15,10 +15,10 @@ class SimpleStopControllerNode:
 		self.projection = rospy.Subscriber("/obstacle_safety_node/detection_list_proj",ObstacleProjectedDetectionList,self.cbdata_transfer,queue_size = 1)
 		self.projection = rospy.Subscriber("Filter",Dmp,self.cbimudata,queue_size = 1)
 		self.pp = rospy.Subscriber("test",Vector2D,self.cbpp,queue_size = 1)
-        self.pub_car_cmd = rospy.Publisher("~car_cmd",Twist2DStamped,queue_size=1)
-      	self.t1 = threading.Thread(target = self.f1, name='control')
-      	self.t2 = threading.Thread(target = self.f2, name='imu')
-      	self.t3 = threading.Thread(target = self.f3, name = 'ScheduleThread')
+        	self.pub_car_cmd = rospy.Publisher("~car_cmd",Twist2DStamped,queue_size=1)
+      		self.t1 = threading.Thread(target = self.f1, name='control')
+      		self.t2 = threading.Thread(target = self.f2, name='imu')
+      		self.t3 = threading.Thread(target = self.f3, name = 'ScheduleThread')
 		self.threadC = threading.Condition()
 
 	def fuck(self,v, omega):
@@ -27,7 +27,7 @@ class SimpleStopControllerNode:
     		car_cmd.v = v
    		car_cmd.omega = omega
    		self.pub_car_cmd.publish(car_cmd)
-		print"fuck"
+		#print"fuck"
 		
 	def choose(self,cat):
 		for i in range(len(cat)):
@@ -102,19 +102,22 @@ class SimpleStopControllerNode:
                 tmp.thetax = theta.thetax
                 tmp.thetay = theta.thetay
                 tmp.thetaz = theta.thetaz
-				if self.t1.isAlive() and not self.t2.isAlive():
-					t2.start()
-					self.dataDegrees.thetax = theta.thetax
-					self.dataDegrees.thetay = theta.thetay
-					self.dataDegrees.thetaz = theta.thetaz
-					self.raw = self.dataDegrees.thetay
-		print(str(self.raw),"raw")
-				elif self.t1.isAlive() and self.t2.isAlive():					
-					continuous(tmp)		
+		print ("t1 alive?",self.t1.isAlive())
+		print ("t2 alive?",self.t2.isAlive())
+		if  self.t1.isAlive() and not self.t2.isAlive():
+			self.t2.start()
+			#rospy.sleep(0.5)
+			self.dataDegrees.thetax = theta.thetax
+			self.dataDegrees.thetay = theta.thetay
+			self.dataDegrees.thetaz = theta.thetaz
+			self.raw = self.dataDegrees.thetay
+			print(str(self.raw),"raw")
+		elif self.t1.isAlive() and self.t2.isAlive():					
+			self.continuous(tmp)		
 			
 			
 
-	def f2(self,theta):
+	def f2(self):
 		self.threadC.acquire()
 		self.threadC.wait()
 		self.threadC.release()
@@ -134,19 +137,20 @@ class SimpleStopControllerNode:
 				self.fuck(0,0)
 
 	def continuous(self, dataDegrees):
-			self.desire('R')
-			error = 0.1	
-			xr = math.cos(self.raw)
-			yr = math.sin(self.raw)
-			x = math.cos(dataDegrees.thetay)
-			y = math.sin(dataDegrees.thetay)
-			d = math.sqrt( (x - xr)**2 + (y - yr)**2 )
-			value = (2 - (d**2)) / float(2)
-			desire = math.degrees(math.acos(value))
-			if desire >= 75.0:
-					self.t3.start()
-		self.desire('M')
-		rospy.loginfo("-----------------------------------------------------------------------------------------")
+		#rospy.loginfo("@@@@@@@@@@@@@@@@@@@@@")
+		self.desire('R')
+		error = 0.1	
+		xr = math.cos(self.raw)
+		yr = math.sin(self.raw)
+		x = math.cos(dataDegrees.thetay)
+		y = math.sin(dataDegrees.thetay)
+		d = math.sqrt( (x - xr)**2 + (y - yr)**2 )
+		value = (2 - (d**2)) / float(2)
+		desire = math.degrees(math.acos(value))
+		if desire >= 75.0:
+			self.t3.start()
+			self.desire('M')
+			rospy.loginfo("-----------------------------------------------------------------------------------------")
 
 	def f3(self):
 		self.threadC.acquire()
