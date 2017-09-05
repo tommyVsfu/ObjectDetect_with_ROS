@@ -11,12 +11,13 @@ class SimpleStopControllerNode:
 		self.raw = 0.0
 		self.dataDegrees = Dmp()
 		self.testtime = rospy.Time(0)
+		self.cmd = 'A'
         #self.sub_close = rospy.Subscriber("/obstacle_safety_node/object_too_close", BoolStamped, self.cbBool, queue_size=1)
 		self.projection = rospy.Subscriber("/obstacle_safety_node/detection_list_proj",ObstacleProjectedDetectionList,self.cbdata_transfer,queue_size = 1)
 		self.projection = rospy.Subscriber("Filter",Dmp,self.cbimudata,queue_size = 1)
 		self.pp = rospy.Subscriber("test",Vector2D,self.cbpp,queue_size = 1)
         	self.pub_car_cmd = rospy.Publisher("~car_cmd",Twist2DStamped,queue_size=1)
-      		self.t1 = threading.Thread(target = self.f1, name='control')
+      		self.t1 = threading.Thread(target = self.f1,args=(self.cmd,), name='control')
       		self.t2 = threading.Thread(target = self.f2, name='imu')
       		self.t3 = threading.Thread(target = self.f3, name = 'ScheduleThread')
 		self.threadC = threading.Condition()
@@ -74,13 +75,26 @@ class SimpleStopControllerNode:
         	#rospy.loginfo(str(omega))
 
         # control decision	
-			kinect = Twist2DStamped()
-			if math.degrees(theta) > 0 and dist > 0.3:
-				self.choose("F")
-			elif math.degrees(theta) < 0 and dist > 0.3:
-				self.choose("G")
-			elif dist < 0.3 :
-				self.choose("S")
+			#kinect = Twist2DStamped()
+			#if math.degrees(theta) > 0 and dist > 0.3:
+			#	self.choose("F")
+			#elif math.degrees(theta) < 0 and dist > 0.3:
+			#	self.choose("G")
+			#elif dist < 0.3 :
+				#self.choose("S")
+			if math.degrees(theta) > 30.0:
+				self.threadC.acquire()
+				self.cmd = 'L'
+				self.threadC.release()
+			elif math.degrees(theta) < -30.0:
+				self.threadC.acquire()
+				self.cmd = 'R'
+				self.threadC.release()
+			elif :
+				self.threadC.acquire()
+				self.cmd = 'S'
+				self.threadC.release()
+				self.desire(self.cmd)
 		
 
 		else:
@@ -112,8 +126,11 @@ class SimpleStopControllerNode:
 			self.dataDegrees.thetaz = theta.thetaz
 			self.raw = self.dataDegrees.thetay
 			print(str(self.raw),"raw")
-		elif self.t1.isAlive() and self.t2.isAlive():					
-			self.continuous(tmp)		
+		elif self.t1.isAlive() and self.t2.isAlive():
+			self.acquire()
+			command = self.cmd
+			self.release()					
+			self.continuous(tmp,command)		
 			
 			
 
@@ -136,9 +153,12 @@ class SimpleStopControllerNode:
 			if pri == 'M':
 				self.fuck(0,0)
 
-	def continuous(self, dataDegrees):
+	def continuous(self, dataDegrees,command):
 		#rospy.loginfo("@@@@@@@@@@@@@@@@@@@@@")
-		self.desire('R')
+		if command == 'R':
+			self.desire('R')
+		elif command == 'L':
+			self.desire('L')
 		error = 0.1	
 		xr = math.cos(self.raw)
 		yr = math.sin(self.raw)
@@ -147,7 +167,7 @@ class SimpleStopControllerNode:
 		d = math.sqrt( (x - xr)**2 + (y - yr)**2 )
 		value = (2 - (d**2)) / float(2)
 		desire = math.degrees(math.acos(value))
-		if desire >= 75.0:
+		if desire >= 30.0:
 			self.t3.start()
 			self.desire('M')
 			rospy.loginfo("-----------------------------------------------------------------------------------------")
